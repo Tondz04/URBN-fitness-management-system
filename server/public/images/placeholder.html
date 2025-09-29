@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Placeholder Image Generator</title>
+    </head>
+    <body>
+        <canvas id="canvas" width="200" height="200"></canvas>
+        <script>
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+
+            // Fill background
+            ctx.fillStyle = "#333333";
+            ctx.fillRect(0, 0, 200, 200);
+
+            // Add text
+            ctx.fillStyle = "#999999";
+            ctx.font = "14px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("No Image", 100, 100);
+
+            // Convert to data URL and download
+            const dataURL = canvas.toDataURL("image/jpeg");
+            const link = document.createElement("a");
+            link.download = "placeholder-product.jpg";
+            link.href = dataURL;
+            link.click();
+        </script>
+    </body>
+</html>

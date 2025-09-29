@@ -1,0 +1,172 @@
+RNL SETUP - COMPLETE SYSTEM SITEMAP
+=====================================
+
+                                    HOME
+                                     |
+                                     |
+                    +----------------+----------------+----------------+----------------+
+                    |                |                |                |                |
+                DASHBOARD      TRANSACTIONS        PRODUCTS          USERS
+                    |                |                |                |
+                    |                |                |                |
+            +-------+-------+    +---+---+---+    +---+---+---+    +---+---+---+
+            |               |    |   |   |   |    |   |   |   |    |   |   |   |
+        METRICS         CHARTS    ADD  FILTER DELETE  VIEW  STOCK   ADD  VIEW  DELETE
+            |               |    |   |   |   |    |   |   |   |    |   |   |   |
+            |               |    |   |   |   |    |   |   |   |    |   |   |   |
+    +------+------+  +----+----+  |   |   |   |    |   |   |   |    |   |   |   |
+    |      |      |  |     |    |  |   |   |   |    |   |   |   |    |   |   |   |
+TOTAL   ACTIVE  MONTHLY  NEW   |   |   |   |    |   |   |   |    |   |   |   |
+USERS   MEMBERS REVENUE SIGNUPS |   |   |   |    |   |   |   |    |   |   |   |
+                |                |   |   |   |    |   |   |   |    |   |   |   |
+                |                |   |   |   |    |   |   |   |    |   |   |   |
+            WEEKLY REVENUE       |   |   |   |    |   |   |   |    |   |   |   |
+            TREND CHART          |   |   |   |    |   |   |   |    |   |   |   |
+                                |   |   |   |    |   |   |   |    |   |   |   |
+                            REVENUE BREAKDOWN      |   |   |   |    |   |   |   |
+                            PIE CHART             |   |   |   |    |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              MEMBERSHIPS vs PRODUCTS
+                                                  |   |   |   |    |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              TRANSACTION TYPES:     |   |   |   |
+                                              - MEMBERSHIP           |   |   |   |
+                                              - PRODUCT PURCHASE     |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              FILTERING OPTIONS:     |   |   |   |
+                                              - BY TYPE             |   |   |   |
+                                              - BY STATUS           |   |   |   |
+                                              - BY DATE RANGE       |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              ADD TRANSACTION FORM:  |   |   |   |
+                                              - USER SELECTION      |   |   |   |
+                                              - TRANSACTION TYPE    |   |   |   |
+                                              - MEMBERSHIP OPTIONS: |   |   |   |
+                                                * STUDENT (₱300)    |   |   |   |
+                                                * REGULAR (₱500)    |   |   |   |
+                                                * WITH COACH (₱1500)|   |   |   |
+                                              - PRODUCT SELECTION   |   |   |   |
+                                              - QUANTITY            |   |   |   |
+                                              - PAYMENT MODE        |   |   |   |
+                                              - DATE                |   |   |   |
+                                              - NOTES               |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              TRANSACTION TABLE:    |   |   |   |
+                                              - ID                  |   |   |   |
+                                              - USER INFO           |   |   |   |
+                                              - TYPE BADGE          |   |   |   |
+                                              - DETAILS             |   |   |   |
+                                              - AMOUNT              |   |   |   |
+                                              - DATE                |   |   |   |
+                                              - STATUS              |   |   |   |
+                                              - PAYMENT MODE        |   |   |   |
+                                              - DELETE BUTTON       |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              SAFE DELETION:        |   |   |   |
+                                              - STOCK RESTORATION   |   |   |   |
+                                              - MEMBERSHIP CLEANUP  |   |   |   |
+                                              - USER STATUS UPDATE  |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              REAL-TIME UPDATES:    |   |   |   |
+                                              - DASHBOARD METRICS   |   |   |   |
+                                              - USER MEMBERSHIPS    |   |   |   |
+                                              - PRODUCT STOCK       |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              PRODUCT CATALOG:      |   |   |   |
+                                              - PRODUCT IMAGES      |   |   |   |
+                                              - NAMES & DESCRIPTIONS|   |   |   |
+                                              - PRICES (₱)          |   |   |   |
+                                              - STOCK LEVELS        |   |   |   |
+                                              - CATEGORIES:         |   |   |   |
+                                                * SUPPLEMENTS        |   |   |   |
+                                                * EQUIPMENT          |   |   |   |
+                                                * APPAREL            |   |   |   |
+                                                * OTHER              |   |   |   |
+                                              - STOCK STATUS:       |   |   |   |
+                                                * IN STOCK           |   |   |   |
+                                                * LOW STOCK          |   |   |   |
+                                                * OUT OF STOCK       |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              USER MANAGEMENT:      |   |   |   |
+                                              - USER LISTING        |   |   |   |
+                                              - PERSONAL INFO:      |   |   |   |
+                                                * NAME               |   |   |   |
+                                                * EMAIL              |   |   |   |
+                                                * PHONE              |   |   |   |
+                                                * RFID TAG           |   |   |   |
+                                              - STATUS TRACKING:    |   |   |   |
+                                                * ACTIVE             |   |   |   |
+                                                * INACTIVE           |   |   |   |
+                                                * EXPIRED            |   |   |   |
+                                              - MEMBERSHIP INFO:    |   |   |   |
+                                                * TYPE               |   |   |   |
+                                                * FEE                |   |   |   |
+                                                * START DATE         |   |   |   |
+                                                * END DATE           |   |   |   |
+                                                * DAYS REMAINING     |   |   |   |
+                                                * STATUS BADGE       |   |   |   |
+                                              - ADD USER FORM:      |   |   |   |
+                                                * NAME (REQUIRED)    |   |   |   |
+                                                * EMAIL (REQUIRED)   |   |   |   |
+                                                * PHONE              |   |   |   |
+                                                * RFID TAG           |   |   |   |
+                                                * STATUS             |   |   |   |
+                                                * NOTES              |   |   |   |
+                                              - DELETE USER:         |   |   |   |
+                                                * SAFETY CHECKS      |   |   |   |
+                                                * CONFIRMATION       |   |   |   |
+                                                * TRANSACTION CHECK  |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              BACKEND API:          |   |   |   |
+                                              - /api/metrics        |   |   |   |
+                                              - /api/users          |   |   |   |
+                                              - /api/transactions   |   |   |   |
+                                              - /api/products       |   |   |   |
+                                              - /api/membership-types|   |   |   |
+                                              - /api/transaction-filters|   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              DATABASE TABLES:      |   |   |   |
+                                              - users               |   |   |   |
+                                              - memberships         |   |   |   |
+                                              - transactions        |   |   |   |
+                                              - products            |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              RFID INTEGRATION:     |   |   |   |
+                                              - TAG ASSIGNMENT      |   |   |   |
+                                              - ACCESS CONTROL      |   |   |   |
+                                              - MEMBERSHIP VALIDATION|   |   |   |
+                                              - DOOR SYSTEM READY   |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              BUSINESS FEATURES:    |   |   |   |
+                                              - 30-DAY MEMBERSHIPS  |   |   |   |
+                                              - AUTOMATIC EXPIRATION|   |   |   |
+                                              - REVENUE TRACKING    |   |   |   |
+                                              - STOCK MANAGEMENT    |   |   |   |
+                                              - USER ANALYTICS      |   |   |   |
+                                              - TRANSACTION HISTORY |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              SECURITY FEATURES:    |   |   |   |
+                                              - INPUT VALIDATION    |   |   |   |
+                                              - SAFE DELETIONS      |   |   |   |
+                                              - BUSINESS LOGIC      |   |   |   |
+                                              - DATA INTEGRITY      |   |   |   |
+                                                  |   |   |   |    |   |   |   |
+                                              USER EXPERIENCE:      |   |   |   |
+                                              - RESPONSIVE DESIGN   |   |   |   |
+                                              - LOADING STATES      |   |   |   |
+                                              - ERROR HANDLING      |   |   |   |
+                                              - SUCCESS FEEDBACK    |   |   |   |
+                                              - CONFIRMATION DIALOGS|   |   |   |
+                                              - COLOR-CODED STATUS  |   |   |   |
+                                              - INTUITIVE NAVIGATION|   |   |   |
+
+=====================================
+SYSTEM STATUS: PRODUCTION READY ✅
+=====================================
+- NO DEMO DATA - ALL REAL DATABASE
+- COMPLETE CRUD OPERATIONS
+- RFID ACCESS CONTROL READY
+- REAL-TIME UPDATES
+- FULL BUSINESS LOGIC
+- SECURE OPERATIONS
+=====================================
