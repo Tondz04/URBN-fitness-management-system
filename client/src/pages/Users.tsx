@@ -1,16 +1,39 @@
 import * as React from "react";
-import { Layout } from "../components/Layout";
 import { Modal } from "../components/Modal";
 
-export default function Users() {
-  const [users, setUsers] = React.useState<any[] | null>(null);
+export default function Clients() {
+  const [clients, setClients] = React.useState<any[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [showAddForm, setShowAddForm] = React.useState(false);
-  const [deletingUser, setDeletingUser] = React.useState<number | null>(null);
-  const [detailsUser, setDetailsUser] = React.useState<any | null>(null);
+  const [showEditForm, setShowEditForm] = React.useState(false);
+  const [editingClient, setEditingClient] = React.useState<any | null>(null);
+  const [deletingClient, setDeletingClient] = React.useState<number | null>(
+    null
+  );
+  const [detailsClient, setDetailsClient] = React.useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = React.useState("");
 
-  // Form state for adding new user
+  // Filter clients based on search term
+  const filteredClients = React.useMemo(() => {
+    if (!clients) return [];
+
+    return clients.filter((client) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        client.name?.toLowerCase().includes(searchLower) ||
+        client.email?.toLowerCase().includes(searchLower) ||
+        client.phone?.toLowerCase().includes(searchLower) ||
+        client.address?.toLowerCase().includes(searchLower) ||
+        client.rfid_tag?.toLowerCase().includes(searchLower) ||
+        client.age?.toString().includes(searchLower) ||
+        client.status?.toLowerCase().includes(searchLower) ||
+        client.notes?.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [clients, searchTerm]);
+
+  // Form state for adding new client
   const [formData, setFormData] = React.useState({
     first_name: "",
     last_name: "",
@@ -24,10 +47,51 @@ export default function Users() {
   });
 
   React.useEffect(() => {
-    fetchUsers();
+    fetchClients();
   }, []);
 
-  const fetchUsers = async () => {
+  // Generate unique RFID tag
+  const generateRFID = () => {
+    const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
+    return `GYM-${timestamp}-${random}`;
+  };
+
+  // Generate RFID when form opens
+  React.useEffect(() => {
+    if (showAddForm) {
+      setFormData((prev) => ({
+        ...prev,
+        rfid_tag: generateRFID(),
+      }));
+    }
+  }, [showAddForm]);
+
+  // Populate form data when editing
+  React.useEffect(() => {
+    if (showEditForm && editingClient) {
+      const extraDetails = getClientDetails(editingClient);
+      setFormData({
+        first_name:
+          extraDetails.first_name || editingClient.name?.split(" ")[0] || "",
+        last_name:
+          extraDetails.last_name ||
+          editingClient.name?.split(" ").slice(1).join(" ") ||
+          "",
+        email: editingClient.email || "",
+        phone: editingClient.phone || "",
+        age: extraDetails.age || "",
+        address: extraDetails.address || "",
+        rfid_tag: editingClient.rfid_tag || generateRFID(),
+        status: editingClient.status || "active",
+        notes: editingClient.notes || "",
+      });
+    }
+  }, [showEditForm, editingClient]);
+
+  const fetchClients = async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/users");
@@ -35,21 +99,21 @@ export default function Users() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const data = await response.json();
-      setUsers(data.data);
+      setClients(data.data);
       setError(null);
     } catch (err: any) {
-      console.error("Failed to fetch users:", err);
-      setError(err.message || "Failed to load users");
-      setUsers(null);
+      console.error("Failed to fetch clients:", err);
+      setError(err.message || "Failed to load clients");
+      setClients(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Local storage helpers for extra user details
+  // Local storage helpers for extra client details
   const loadExtraDetails = (): Record<string, any> => {
     try {
-      const raw = localStorage.getItem("userExtraDetails");
+      const raw = localStorage.getItem("clientExtraDetails");
       return raw ? JSON.parse(raw) : {};
     } catch {
       return {};
@@ -59,20 +123,20 @@ export default function Users() {
   const saveExtraDetails = (email: string, details: any) => {
     const map = loadExtraDetails();
     map[email] = { ...map[email], ...details };
-    localStorage.setItem("userExtraDetails", JSON.stringify(map));
+    localStorage.setItem("clientExtraDetails", JSON.stringify(map));
   };
 
-  const getUserDetails = (user: any) => {
+  const getClientDetails = (client: any) => {
     const map = loadExtraDetails();
-    const existing = map[user.email];
+    const existing = map[client.email];
     if (existing) return existing;
     const placeholder = {
-      first_name: user.name?.split(" ")[0] || "Guest",
-      last_name: user.name?.split(" ").slice(1).join(" ") || "User",
+      first_name: client.name?.split(" ")[0] || "Guest",
+      last_name: client.name?.split(" ").slice(1).join(" ") || "User",
       age: Math.floor(18 + Math.random() * 22),
       address: "Iloilo City, Philippines",
     };
-    saveExtraDetails(user.email, placeholder);
+    saveExtraDetails(client.email, placeholder);
     return placeholder;
   };
 
@@ -96,7 +160,7 @@ export default function Users() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create user");
+        throw new Error(errorData.message || "Failed to create client");
       }
 
       saveExtraDetails(formData.email, {
@@ -114,46 +178,100 @@ export default function Users() {
         phone: "",
         age: "",
         address: "",
-        rfid_tag: "",
+        rfid_tag: generateRFID(),
         status: "active",
         notes: "",
       });
       setShowAddForm(false);
-      fetchUsers();
-      alert("User created successfully!");
+      fetchClients();
+      alert("Client created successfully!");
     } catch (err: any) {
-      console.error("Failed to create user:", err);
-      alert("Failed to create user: " + err.message);
+      console.error("Failed to create client:", err);
+      alert("Failed to create client: " + err.message);
     }
   };
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClient) return;
+
+    try {
+      const response = await fetch(`/api/users/${editingClient.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${formData.first_name} ${formData.last_name}`.trim(),
+          email: formData.email,
+          phone: formData.phone,
+          rfid_tag: formData.rfid_tag,
+          status: formData.status,
+          notes: formData.notes,
+          age: formData.age,
+          address: formData.address,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update client");
+      }
+
+      saveExtraDetails(formData.email, {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        age: formData.age,
+        address: formData.address,
+      });
+
+      // Reset form and refresh data
+      setFormData({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: "",
+        age: "",
+        address: "",
+        rfid_tag: generateRFID(),
+        status: "active",
+        notes: "",
+      });
+      setShowEditForm(false);
+      setEditingClient(null);
+      fetchClients();
+      alert("Client updated successfully!");
+    } catch (err: any) {
+      console.error("Failed to update client:", err);
+      alert("Failed to update client: " + err.message);
+    }
+  };
+
+  const handleDeleteClient = async (clientId: number) => {
     if (
       !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
+        "Are you sure you want to delete this client? This action cannot be undone."
       )
     ) {
       return;
     }
 
     try {
-      setDeletingUser(userId);
-      const response = await fetch(`/api/users/${userId}`, {
+      setDeletingClient(clientId);
+      const response = await fetch(`/api/users/${clientId}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete user");
+        throw new Error(errorData.message || "Failed to delete client");
       }
 
-      fetchUsers();
-      alert("User deleted successfully!");
+      fetchClients();
+      alert("Client deleted successfully!");
     } catch (err: any) {
-      console.error("Failed to delete user:", err);
-      alert("Failed to delete user: " + err.message);
+      console.error("Failed to delete client:", err);
+      alert("Failed to delete client: " + err.message);
     } finally {
-      setDeletingUser(null);
+      setDeletingClient(null);
     }
   };
 
@@ -211,58 +329,25 @@ export default function Users() {
 
   if (loading) {
     return (
-      <Layout>
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: 18, color: "#9ca3af" }}>Loading users...</div>
-        </div>
-      </Layout>
+      <div style={{ textAlign: "center", padding: "40px 20px" }}>
+        <div style={{ fontSize: 18, color: "#9ca3af" }}>Loading users...</div>
+      </div>
     );
   }
 
-  if (error || !users) {
+  if (error || !clients) {
     return (
-      <Layout>
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: 18, color: "#ef4444", marginBottom: 16 }}>
-            Failed to load users
-          </div>
-          <div style={{ color: "#9ca3af", marginBottom: 20 }}>
-            {error || "Unable to connect to the server"}
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              background: "#3b82f6",
-              color: "white",
-              border: 0,
-              borderRadius: 8,
-              padding: "12px 24px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Retry
-          </button>
+      <div style={{ textAlign: "center", padding: "40px 20px" }}>
+        <div style={{ fontSize: 18, color: "#ef4444", marginBottom: 16 }}>
+          Failed to load clients
         </div>
-      </Layout>
-    );
-  }
-
-  return (
-    <Layout>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <h2 style={{ fontSize: 24, fontWeight: 800 }}>Users & Memberships</h2>
+        <div style={{ color: "#9ca3af", marginBottom: 20 }}>
+          {error || "Unable to connect to the server"}
+        </div>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => window.location.reload()}
           style={{
-            background: "#10b981",
+            background: "#071d63",
             color: "white",
             border: 0,
             borderRadius: 8,
@@ -271,16 +356,49 @@ export default function Users() {
             cursor: "pointer",
           }}
         >
-          {showAddForm ? "Cancel" : "Add User"}
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <h2 style={{ fontSize: 24, fontWeight: 800 }}>Clients & Memberships</h2>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{
+            background: "#057a1a",
+            color: "white",
+            border: 0,
+            borderRadius: 8,
+            padding: "12px 24px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          {showAddForm ? "Cancel" : "Add Client"}
         </button>
       </div>
 
-      {/* Add User Modal */}
+      {/* Add Client Modal */}
       {showAddForm && (
-        <Modal title="Add New User" onClose={() => setShowAddForm(false)}>
+        <Modal
+          title="Add New Client"
+          onClose={() => setShowAddForm(false)}
+          maxWidth={700}
+        >
           <form
             onSubmit={handleSubmit}
-            style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}
+            style={{ display: "grid", gap: 20, gridTemplateColumns: "1fr 1fr" }}
           >
             <div>
               <label
@@ -302,7 +420,8 @@ export default function Users() {
                 }
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -330,7 +449,8 @@ export default function Users() {
                 onChange={(e) => handleInputChange("last_name", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -358,7 +478,8 @@ export default function Users() {
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -385,7 +506,8 @@ export default function Users() {
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -413,7 +535,8 @@ export default function Users() {
                 onChange={(e) => handleInputChange("age", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -440,7 +563,8 @@ export default function Users() {
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -459,22 +583,59 @@ export default function Users() {
                   marginBottom: 4,
                 }}
               >
-                RFID Tag
+                RFID Tag (Auto-generated)
               </label>
-              <input
-                type="text"
-                value={formData.rfid_tag}
-                onChange={(e) => handleInputChange("rfid_tag", e.target.value)}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="text"
+                  value={formData.rfid_tag}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    maxWidth: "200px",
+                    background: "#1a1a1a",
+                    border: "1px solid #374151",
+                    color: "#9ca3af",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    fontFamily: "monospace",
+                    fontSize: 12,
+                  }}
+                  placeholder="Auto-generated RFID"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rfid_tag: generateRFID(),
+                    }))
+                  }
+                  style={{
+                    background: "#071d63",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                  title="Generate new RFID"
+                >
+                  🔄
+                </button>
+              </div>
+              <div
                 style={{
-                  width: "100%",
-                  background: "#1f2937",
-                  border: "1px solid #374151",
-                  color: "white",
-                  padding: "8px 12px",
-                  borderRadius: 6,
+                  color: "#6b7280",
+                  fontSize: 11,
+                  marginTop: 4,
+                  fontStyle: "italic",
                 }}
-                placeholder="Enter RFID tag (optional)"
-              />
+              >
+                RFID is auto-generated. Click 🔄 to generate a new one.
+              </div>
             </div>
 
             <div>
@@ -493,7 +654,8 @@ export default function Users() {
                 onChange={(e) => handleInputChange("status", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   color: "white",
                   padding: "8px 12px",
@@ -502,6 +664,347 @@ export default function Users() {
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 8,
+                  fontWeight: 600,
+                }}
+              >
+                Notes
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => handleInputChange("notes", e.target.value)}
+                style={{
+                  width: "100%",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  color: "white",
+                  padding: "12px",
+                  borderRadius: 8,
+                  minHeight: 80,
+                  fontSize: 14,
+                  resize: "vertical",
+                }}
+                placeholder="Optional notes about this client..."
+              />
+            </div>
+
+            <div style={{ gridColumn: "1 / -1", textAlign: "right" }}>
+              <button
+                type="submit"
+                style={{
+                  background: "#057a1a",
+                  color: "white",
+                  border: 0,
+                  borderRadius: 8,
+                  padding: "12px 24px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Create Client
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit Client Modal */}
+      {showEditForm && editingClient && (
+        <Modal
+          title="Edit Client"
+          onClose={() => {
+            setShowEditForm(false);
+            setEditingClient(null);
+          }}
+          maxWidth={700}
+        >
+          <form
+            onSubmit={handleEditSubmit}
+            style={{
+              display: "grid",
+              gap: 20,
+              gridTemplateColumns: "1fr 1fr",
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                First Name
+              </label>
+              <input
+                type="text"
+                value={formData.first_name}
+                onChange={(e) =>
+                  handleInputChange("first_name", e.target.value)
+                }
+                required
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  padding: "12px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                }}
+                placeholder="Enter first name"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={formData.last_name}
+                onChange={(e) => handleInputChange("last_name", e.target.value)}
+                required
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  padding: "12px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                }}
+                placeholder="Enter last name"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                required
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  padding: "12px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                }}
+                placeholder="Enter email"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                Phone
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  padding: "12px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                }}
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                Age
+              </label>
+              <input
+                type="number"
+                value={formData.age}
+                onChange={(e) => handleInputChange("age", e.target.value)}
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  padding: "12px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                }}
+                placeholder="Enter age"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                Address
+              </label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleInputChange("address", e.target.value)}
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  padding: "12px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                }}
+                placeholder="Enter address"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                RFID Tag (Auto-generated)
+              </label>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="text"
+                  value={formData.rfid_tag}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    maxWidth: "200px",
+                    background: "#1a1a1a",
+                    border: "1px solid #374151",
+                    color: "#9ca3af",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    fontFamily: "monospace",
+                    fontSize: 12,
+                  }}
+                  placeholder="Auto-generated RFID"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rfid_tag: generateRFID(),
+                    }))
+                  }
+                  style={{
+                    background: "#071d63",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                  title="Generate new RFID"
+                >
+                  🔄
+                </button>
+              </div>
+              <div
+                style={{
+                  color: "#6b7280",
+                  fontSize: 11,
+                  marginTop: 4,
+                  fontStyle: "italic",
+                }}
+              >
+                RFID is auto-generated. Click 🔄 to generate a new one.
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  color: "#9ca3af",
+                  fontSize: 12,
+                  marginBottom: 4,
+                }}
+              >
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => handleInputChange("status", e.target.value)}
+                style={{
+                  width: "100%",
+                  maxWidth: "250px",
+                  background: "#1a1a1a",
+                  border: "1px solid #374151",
+                  color: "white",
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                }}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="expired">Expired</option>
               </select>
             </div>
 
@@ -521,22 +1024,36 @@ export default function Users() {
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 style={{
                   width: "100%",
-                  background: "#1f2937",
+                  padding: "12px",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
-                  color: "white",
-                  padding: "8px 12px",
-                  borderRadius: 6,
-                  minHeight: 80,
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  fontSize: 14,
+                  resize: "vertical",
                 }}
-                placeholder="Optional notes about this user..."
+                placeholder="Optional notes about this client..."
+                rows={3}
               />
             </div>
 
-            <div style={{ gridColumn: "1 / -1", textAlign: "right" }}>
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                display: "flex",
+                gap: 12,
+                justifyContent: "flex-end",
+                marginTop: 20,
+              }}
+            >
               <button
-                type="submit"
+                type="button"
+                onClick={() => {
+                  setShowEditForm(false);
+                  setEditingClient(null);
+                }}
                 style={{
-                  background: "#10b981",
+                  background: "#6b7280",
                   color: "white",
                   border: 0,
                   borderRadius: 8,
@@ -545,17 +1062,73 @@ export default function Users() {
                   cursor: "pointer",
                 }}
               >
-                Create User
+                Cancel
+              </button>
+              <button
+                type="submit"
+                style={{
+                  background: "#057a1a",
+                  color: "white",
+                  border: 0,
+                  borderRadius: 8,
+                  padding: "12px 24px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Update Client
               </button>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* Users Table */}
+      {/* Search Section */}
       <div
         style={{
-          background: "#0b0f1a",
+          display: "flex",
+          gap: 20,
+          marginBottom: 24,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ flex: 1, maxWidth: 400 }}>
+          <input
+            type="text"
+            placeholder="Search clients by name, email, phone, address, RFID tag, age, status, or notes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              background: "#1a1a1a",
+              border: "1px solid #374151",
+              borderRadius: 8,
+              color: "#e5e7eb",
+              fontSize: 14,
+            }}
+          />
+        </div>
+        {searchTerm && (
+          <div
+            style={{
+              color: "#9ca3af",
+              fontSize: 14,
+              whiteSpace: "nowrap",
+              marginLeft: 20,
+            }}
+          >
+            {filteredClients.length} client
+            {filteredClients.length !== 1 ? "s" : ""} found
+          </div>
+        )}
+      </div>
+
+      {/* Clients Table */}
+      <div
+        style={{
+          background: "#000000",
           borderRadius: 12,
           border: "1px solid #1f2937",
           overflow: "hidden",
@@ -573,10 +1146,10 @@ export default function Users() {
               style={{
                 color: "#9ca3af",
                 textAlign: "left",
-                background: "#111827",
+                background: "#1a1a1a",
               }}
             >
-              <th style={{ padding: 16 }}>User</th>
+              <th style={{ padding: 16 }}>Client</th>
               <th style={{ padding: 16 }}>RFID Tag</th>
               <th style={{ padding: 16 }}>Status</th>
               <th style={{ padding: 16 }}>Membership</th>
@@ -586,12 +1159,12 @@ export default function Users() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
+            {filteredClients.map((client) => (
+              <tr key={client.id}>
                 <td style={{ padding: 16, borderTop: "1px solid #1f2937" }}>
                   <div>
                     <button
-                      onClick={() => setDetailsUser(user)}
+                      onClick={() => setDetailsClient(client)}
                       style={{
                         background: "transparent",
                         color: "#ffffff",
@@ -603,27 +1176,27 @@ export default function Users() {
                         textAlign: "left",
                       }}
                     >
-                      {user.name}
+                      {client.name}
                     </button>
                     <div style={{ color: "#9ca3af", fontSize: 12 }}>
-                      {user.email}
+                      {client.email}
                     </div>
                     <div style={{ color: "#9ca3af", fontSize: 12 }}>
-                      {user.phone}
+                      {client.phone}
                     </div>
                   </div>
                 </td>
                 <td style={{ padding: 16, borderTop: "1px solid #1f2937" }}>
                   <div
                     style={{
-                      background: "#1f2937",
+                      background: "#1a1a1a",
                       padding: "4px 8px",
                       borderRadius: 4,
                       fontSize: 12,
                       fontFamily: "monospace",
                     }}
                   >
-                    {user.rfid_tag || "No RFID"}
+                    {client.rfid_tag || "No RFID"}
                   </div>
                 </td>
                 <td style={{ padding: 16, borderTop: "1px solid #1f2937" }}>
@@ -632,7 +1205,7 @@ export default function Users() {
                   >
                     <div
                       style={{
-                        background: getStatusColor(user.status),
+                        background: getStatusColor(client.status),
                         color: "white",
                         padding: "4px 8px",
                         borderRadius: 4,
@@ -641,15 +1214,15 @@ export default function Users() {
                         textTransform: "capitalize",
                       }}
                     >
-                      {user.status}
+                      {client.status}
                     </div>
                     <select
-                      value={user.status}
+                      value={client.status}
                       onChange={(e) =>
-                        handleUpdateStatus(user.id, e.target.value)
+                        handleUpdateStatus(client.id, e.target.value)
                       }
                       style={{
-                        background: "#1f2937",
+                        background: "#1a1a1a",
                         border: "1px solid #374151",
                         color: "white",
                         padding: "6px 8px",
@@ -667,7 +1240,7 @@ export default function Users() {
                   <div
                     style={{
                       background: getMembershipStatusColor(
-                        user.membership_status
+                        client.membership_status
                       ),
                       color: "white",
                       padding: "4px 8px",
@@ -676,73 +1249,118 @@ export default function Users() {
                       fontWeight: 600,
                     }}
                   >
-                    {user.membership_status}
+                    {client.membership_status}
                   </div>
-                  {user.membership_days_left > 0 && (
+                  {client.membership_days_left > 0 && (
                     <div
                       style={{ color: "#9ca3af", fontSize: 11, marginTop: 4 }}
                     >
-                      {user.membership_days_left} days left
+                      {client.membership_days_left} days left
                     </div>
                   )}
                 </td>
                 <td style={{ padding: 16, borderTop: "1px solid #1f2937" }}>
                   <div style={{ textTransform: "capitalize" }}>
-                    {user.membership_type
-                      ? user.membership_type.replace("_", " ")
+                    {client.membership_type
+                      ? client.membership_type.replace("_", " ")
                       : "None"}
                   </div>
-                  {user.membership_start_date && (
+                  {client.membership_start_date && (
                     <div
                       style={{ color: "#9ca3af", fontSize: 11, marginTop: 4 }}
                     >
                       {new Date(
-                        user.membership_start_date
+                        client.membership_start_date
                       ).toLocaleDateString()}{" "}
                       -{" "}
-                      {new Date(user.membership_end_date).toLocaleDateString()}
+                      {new Date(
+                        client.membership_end_date
+                      ).toLocaleDateString()}
                     </div>
                   )}
                 </td>
                 <td style={{ padding: 16, borderTop: "1px solid #1f2937" }}>
-                  {user.membership_fee ? `₱${user.membership_fee}` : "N/A"}
+                  {client.membership_fee ? `₱${client.membership_fee}` : "N/A"}
                 </td>
                 <td style={{ padding: 16, borderTop: "1px solid #1f2937" }}>
-                  <button
-                    onClick={() => handleDeleteUser(user.id)}
-                    disabled={deletingUser === user.id}
-                    style={{
-                      background:
-                        deletingUser === user.id ? "#6b7280" : "#ef4444",
-                      color: "white",
-                      border: 0,
-                      borderRadius: 6,
-                      padding: "6px 12px",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor:
-                        deletingUser === user.id ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {deletingUser === user.id ? "Deleting..." : "Delete"}
-                  </button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        setEditingClient(client);
+                        setShowEditForm(true);
+                      }}
+                      style={{
+                        background: "#071d63",
+                        color: "white",
+                        border: 0,
+                        borderRadius: 6,
+                        padding: "6px 12px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClient(client.id)}
+                      disabled={deletingClient === client.id}
+                      style={{
+                        background:
+                          deletingClient === client.id ? "#6b7280" : "#ef4444",
+                        color: "white",
+                        border: 0,
+                        borderRadius: 6,
+                        padding: "6px 12px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor:
+                          deletingClient === client.id
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {deletingClient === client.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {detailsUser && (
+
+      {filteredClients.length === 0 && clients && clients.length > 0 && (
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: 18, color: "#9ca3af" }}>
+            No clients found matching your search
+          </div>
+          <div style={{ color: "#6b7280", marginTop: 8 }}>
+            Try adjusting your search terms or status filter
+          </div>
+        </div>
+      )}
+
+      {clients && clients.length === 0 && (
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: 18, color: "#9ca3af" }}>No clients found</div>
+          <div style={{ color: "#6b7280", marginTop: 8 }}>
+            Click "Add Client" to create your first client
+          </div>
+        </div>
+      )}
+
+      {detailsClient && (
         <Modal
-          title="User Details"
-          onClose={() => setDetailsUser(null)}
-          maxWidth={600}
+          title="Client Details"
+          onClose={() => setDetailsClient(null)}
+          maxWidth={700}
         >
           <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
           >
             {(() => {
-              const extra = getUserDetails(detailsUser);
+              const extra = getClientDetails(detailsClient);
               return (
                 <>
                   <div>
@@ -763,12 +1381,14 @@ export default function Users() {
                   </div>
                   <div>
                     <div style={{ color: "#9ca3af", fontSize: 12 }}>Email</div>
-                    <div style={{ color: "#e5e7eb" }}>{detailsUser.email}</div>
+                    <div style={{ color: "#e5e7eb" }}>
+                      {detailsClient.email}
+                    </div>
                   </div>
                   <div>
                     <div style={{ color: "#9ca3af", fontSize: 12 }}>Phone</div>
                     <div style={{ color: "#e5e7eb" }}>
-                      {detailsUser.phone || "—"}
+                      {detailsClient.phone || "—"}
                     </div>
                   </div>
                   <div>
@@ -788,7 +1408,7 @@ export default function Users() {
                       RFID Tag
                     </div>
                     <div style={{ color: "#e5e7eb" }}>
-                      {detailsUser.rfid_tag || "No RFID"}
+                      {detailsClient.rfid_tag || "No RFID"}
                     </div>
                   </div>
                   <div>
@@ -796,13 +1416,13 @@ export default function Users() {
                     <div
                       style={{ color: "#e5e7eb", textTransform: "capitalize" }}
                     >
-                      {detailsUser.status}
+                      {detailsClient.status}
                     </div>
                   </div>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <div style={{ color: "#9ca3af", fontSize: 12 }}>Notes</div>
                     <div style={{ color: "#e5e7eb" }}>
-                      {detailsUser.notes || "—"}
+                      {detailsClient.notes || "—"}
                     </div>
                   </div>
                 </>
@@ -811,6 +1431,6 @@ export default function Users() {
           </div>
         </Modal>
       )}
-    </Layout>
+    </div>
   );
 }

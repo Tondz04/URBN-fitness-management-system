@@ -11,25 +11,28 @@ use App\Models\Membership;
 // Dashboard metrics endpoint
 Route::get('/metrics', function () {
     try {
-        // Get current month transactions
-        $currentMonth = Carbon::now()->startOfMonth();
+        // Get requested month/year or default to current month
+        $requestedYear = request('year', Carbon::now()->year);
+        $requestedMonth = request('month', Carbon::now()->month);
+
+        $selectedDate = Carbon::createFromDate($requestedYear, $requestedMonth, 1);
         $transactions = Transaction::with(['user', 'membership', 'product'])
-            ->whereMonth('transaction_date', $currentMonth->month)
-            ->whereYear('transaction_date', $currentMonth->year)
+            ->whereMonth('transaction_date', $selectedDate->month)
+            ->whereYear('transaction_date', $selectedDate->year)
             ->get();
 
         // Calculate metrics
         $totalUsers = User::count();
         $activeMembers = User::withValidMembership()->count();
         $monthlyRevenue = $transactions->where('status', 'paid')->sum('total_amount');
-        $newSignups = User::whereMonth('membership_start_date', $currentMonth->month)
-            ->whereYear('membership_start_date', $currentMonth->year)
+        $newSignups = User::whereMonth('membership_start_date', $selectedDate->month)
+            ->whereYear('membership_start_date', $selectedDate->year)
             ->count();
 
         // Weekly revenue data
         $weeklyRevenue = [];
         for ($i = 1; $i <= 5; $i++) {
-            $weekStart = $currentMonth->copy()->addWeeks($i - 1)->startOfWeek();
+            $weekStart = $selectedDate->copy()->addWeeks($i - 1)->startOfWeek();
             $weekEnd = $weekStart->copy()->endOfWeek();
 
             $weekRevenue = $transactions

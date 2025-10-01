@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Layout } from "../components/Layout";
 import { Modal } from "../components/Modal";
 
 interface Product {
@@ -35,6 +34,24 @@ export default function Products() {
   });
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Filter products based on search term
+  const filteredProducts = React.useMemo(() => {
+    if (!items) return [];
+
+    return items.filter((product) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        product.name.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower) ||
+        product.category.toLowerCase().includes(searchLower) ||
+        product.price.toString().includes(searchLower) ||
+        product.stock.toString().includes(searchLower) ||
+        (product.is_active ? "active" : "inactive").includes(searchLower)
+      );
+    });
+  }, [items, searchTerm]);
 
   // Helper function to get the correct image URL
   const getImageUrl = (imagePath: string) => {
@@ -281,45 +298,41 @@ export default function Products() {
 
   if (loading) {
     return (
-      <Layout>
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: 18, color: "#9ca3af" }}>
-            Loading products...
-          </div>
+      <div style={{ textAlign: "center", padding: "40px 20px" }}>
+        <div style={{ fontSize: 18, color: "#9ca3af" }}>
+          Loading products...
         </div>
-      </Layout>
+      </div>
     );
   }
 
   if (error && !items) {
     return (
-      <Layout>
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: 18, color: "#ef4444", marginBottom: 16 }}>
-            Failed to load products
-          </div>
-          <div style={{ color: "#9ca3af", marginBottom: 20 }}>{error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              background: "#3b82f6",
-              color: "white",
-              border: 0,
-              borderRadius: 8,
-              padding: "12px 24px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Retry
-          </button>
+      <div style={{ textAlign: "center", padding: "40px 20px" }}>
+        <div style={{ fontSize: 18, color: "#ef4444", marginBottom: 16 }}>
+          Failed to load products
         </div>
-      </Layout>
+        <div style={{ color: "#9ca3af", marginBottom: 20 }}>{error}</div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            background: "#071d63",
+            color: "white",
+            border: 0,
+            borderRadius: 8,
+            padding: "12px 24px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Retry
+        </button>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <div>
       <div
         style={{
           display: "flex",
@@ -334,7 +347,7 @@ export default function Products() {
         <button
           onClick={() => setShowAddForm(!showAddForm)}
           style={{
-            background: "#10b981",
+            background: "#057a1a",
             color: "white",
             border: 0,
             borderRadius: 8,
@@ -366,7 +379,7 @@ export default function Products() {
         <Modal
           title={editingProduct ? "Edit Product" : "Add New Product"}
           onClose={resetForm}
-          maxWidth={900}
+          maxWidth={700}
           footer={
             <>
               <button
@@ -389,7 +402,7 @@ export default function Products() {
                 form="product-form"
                 type="submit"
                 style={{
-                  background: "#3b82f6",
+                  background: "#071d63",
                   color: "white",
                   border: 0,
                   borderRadius: 8,
@@ -406,7 +419,7 @@ export default function Products() {
           <form
             id="product-form"
             onSubmit={handleSubmit}
-            style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}
+            style={{ display: "grid", gap: 20, gridTemplateColumns: "1fr 1fr" }}
           >
             <div>
               <label
@@ -427,8 +440,9 @@ export default function Products() {
                 required
                 style={{
                   width: "100%",
+                  maxWidth: "250px",
                   padding: "12px",
-                  background: "#111827",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   color: "#e5e7eb",
@@ -455,8 +469,9 @@ export default function Products() {
                 required
                 style={{
                   width: "100%",
+                  maxWidth: "300px",
                   padding: "12px",
-                  background: "#111827",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   color: "#e5e7eb",
@@ -491,8 +506,9 @@ export default function Products() {
                 step="0.01"
                 style={{
                   width: "100%",
+                  maxWidth: "300px",
                   padding: "12px",
-                  background: "#111827",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   color: "#e5e7eb",
@@ -521,8 +537,9 @@ export default function Products() {
                 min="0"
                 style={{
                   width: "100%",
+                  maxWidth: "300px",
                   padding: "12px",
-                  background: "#111827",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   color: "#e5e7eb",
@@ -550,7 +567,7 @@ export default function Products() {
                 style={{
                   width: "100%",
                   padding: "12px",
-                  background: "#111827",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   color: "#e5e7eb",
@@ -560,7 +577,7 @@ export default function Products() {
               />
             </div>
 
-            <div>
+            <div style={{ gridColumn: "1 / -1" }}>
               <label
                 style={{
                   display: "block",
@@ -578,7 +595,7 @@ export default function Products() {
                 style={{
                   width: "100%",
                   padding: "12px",
-                  background: "#111827",
+                  background: "#1a1a1a",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   color: "#e5e7eb",
@@ -588,7 +605,7 @@ export default function Products() {
               {imagePreview && (
                 <div style={{ marginTop: 8 }}>
                   <img
-                    src={getImageUrl(imagePreview)}
+                    src={imagePreview ? getImageUrl(imagePreview) : ""}
                     alt="Preview"
                     style={{
                       width: 100,
@@ -607,21 +624,72 @@ export default function Products() {
               )}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
               <input
                 type="checkbox"
                 name="is_active"
                 checked={formData.is_active}
                 onChange={handleInputChange}
-                style={{ margin: 0 }}
+                style={{ margin: 0, transform: "scale(1.2)" }}
               />
-              <label style={{ color: "#e5e7eb", fontSize: 14 }}>
+              <label
+                style={{ color: "#e5e7eb", fontSize: 14, fontWeight: 500 }}
+              >
                 Active (visible to customers)
               </label>
             </div>
           </form>
         </Modal>
       )}
+
+      {/* Search Section */}
+      <div
+        style={{
+          display: "flex",
+          gap: 20,
+          marginBottom: 24,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ flex: 1, maxWidth: 400 }}>
+          <input
+            type="text"
+            placeholder="Search products by name, description, category, price, stock, or status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              background: "#1a1a1a",
+              border: "1px solid #374151",
+              borderRadius: 8,
+              color: "#e5e7eb",
+              fontSize: 14,
+            }}
+          />
+        </div>
+        {searchTerm && (
+          <div
+            style={{
+              color: "#9ca3af",
+              fontSize: 14,
+              whiteSpace: "nowrap",
+              marginLeft: 20,
+            }}
+          >
+            {filteredProducts.length} product
+            {filteredProducts.length !== 1 ? "s" : ""} found
+          </div>
+        )}
+      </div>
 
       <div
         style={{
@@ -630,11 +698,11 @@ export default function Products() {
           gap: 16,
         }}
       >
-        {items?.map((p) => (
+        {filteredProducts?.map((p) => (
           <div
             key={p.id}
             style={{
-              background: "#374151",
+              background: "#1a1a1a",
               borderRadius: 12,
               border: "1px solid #4b5563",
               padding: 16,
@@ -644,7 +712,7 @@ export default function Products() {
             <div
               style={{
                 height: 160,
-                background: "#111827",
+                background: "#1a1a1a",
                 borderRadius: 8,
                 marginBottom: 12,
                 overflow: "hidden",
@@ -667,7 +735,7 @@ export default function Products() {
                     position: "absolute",
                     top: 8,
                     right: 8,
-                    background: "#ef4444",
+                    background: "#8a0707",
                     color: "white",
                     padding: "4px 8px",
                     borderRadius: 4,
@@ -755,6 +823,17 @@ export default function Products() {
         ))}
       </div>
 
+      {filteredProducts.length === 0 && items && items.length > 0 && (
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: 18, color: "#9ca3af" }}>
+            No products found matching your search
+          </div>
+          <div style={{ color: "#6b7280", marginTop: 8 }}>
+            Try adjusting your search terms or category filter
+          </div>
+        </div>
+      )}
+
       {items?.length === 0 && (
         <div style={{ textAlign: "center", padding: "40px 20px" }}>
           <div style={{ fontSize: 18, color: "#9ca3af" }}>
@@ -765,6 +844,6 @@ export default function Products() {
           </div>
         </div>
       )}
-    </Layout>
+    </div>
   );
 }
