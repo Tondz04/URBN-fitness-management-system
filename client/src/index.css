@@ -1,11 +1,8 @@
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  line-height: 1.6;
   font-weight: 400;
-
-  color-scheme: dark;
-  color: #e5e7eb;
-  background-color: #111827;
+  font-size: 18px; /* Base font size increased further */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,48 +10,116 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* Light theme (default) */
+:root,
+[data-theme="light"] {
+  --bg-primary: #ffffff; /* Pure white for main content */
+  --bg-secondary: #e5e7eb; /* Darker gray for sidebar - better contrast */
+  --bg-tertiary: #d1d5db; /* Even darker for hover states */
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #d1d5db; /* Darker border for better visibility */
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
 }
-a:hover {
-  color: #535bf2;
+
+/* Dark theme - Black tones instead of blue */
+[data-theme="dark"] {
+  --bg-primary: #0a0a0a; /* Very dark black for main content */
+  --bg-secondary: #000000; /* Pure black for sidebar */
+  --bg-tertiary: #1a1a1a; /* Slightly lighter black */
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #2a2a2a; /* Dark gray border */
+  --accent-color: #ffffff; /* White accent instead of blue */
+  --accent-hover: #e5e5e5; /* Light gray hover */
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 18px; /* Increased base font size further */
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2.5em; /* Increased from default */
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 2em; /* Increased */
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.5em; /* Increased */
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+p, span, div {
+  font-size: 18px; /* Increased base size further */
+}
+
+table {
+  font-size: 17px; /* Increased table font further */
+}
+
+th, td {
+  font-size: 17px; /* Increased table cell font */
+  padding: 14px 18px; /* Increased padding for readability */
+}
+
+input, select, textarea {
+  font-size: 18px; /* Increased input font */
+  padding: 12px 16px; /* Increased padding */
+}
+
+button {
+  font-size: 18px; /* Increased button font */
+  padding: 12px 20px; /* Increased padding */
+}
+
+a {
+  font-weight: 500;
+  color: var(--accent-color);
+  text-decoration: inherit;
+  font-size: 16px; /* Increased link font */
+}
+a:hover {
+  color: var(--accent-hover);
 }
 
 button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1f2937;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.2s ease;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: var(--bg-tertiary);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #111827;
-    background-color: #ffffff;
+/* Pulse animation for chart tooltips */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.4;
   }
 }

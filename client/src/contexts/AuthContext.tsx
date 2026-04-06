@@ -1,8 +1,15 @@
 import * as React from "react";
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: "main_admin" | "admin" | "staff";
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  userEmail: string | null;
+  user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -14,36 +21,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return localStorage.getItem("isAuthenticated") === "true";
   });
 
-  const [userEmail, setUserEmail] = React.useState(() => {
-    return localStorage.getItem("userEmail");
+  const [user, setUser] = React.useState<User | null>(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      // Validate that the parsed user has required fields
+      if (parsed && typeof parsed === "object" && parsed.email) {
+        return parsed as User;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
   });
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // Check credentials
-    if (email === "management@gmail.com" && password === "123") {
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userEmail", email);
+      localStorage.setItem("user", JSON.stringify(data.user));
       setIsAuthenticated(true);
-      setUserEmail(email);
+      setUser(data.user);
       return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
     }
-
-    return false;
   };
 
   const logout = () => {
     localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("userEmail");
+    localStorage.removeItem("user");
     setIsAuthenticated(false);
-    setUserEmail(null);
+    setUser(null);
   };
 
   const value = {
     isAuthenticated,
-    userEmail,
+    user,
     login,
     logout,
   };

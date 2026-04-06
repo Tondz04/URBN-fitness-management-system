@@ -6,12 +6,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -29,6 +30,8 @@ class User extends Authenticatable
         'membership_type',
         'membership_fee',
         'notes',
+        'role',
+        'password',
     ];
 
     /**
@@ -95,15 +98,15 @@ class User extends Authenticatable
         if (!$this->membership_end_date) {
             return 'No Membership';
         }
-        
+
         if (Carbon::now()->gt($this->membership_end_date)) {
             return 'Expired';
         }
-        
+
         if ($this->membership_days_left <= 7) {
             return 'Expiring Soon';
         }
-        
+
         return 'Active';
     }
 

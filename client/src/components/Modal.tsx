@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface ModalProps {
   title?: string;
@@ -15,6 +16,15 @@ export function Modal({
   maxWidth = 760,
   footer,
 }: ModalProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const bgPrimary = isDark ? "#0a0a0a" : "#ffffff";
+  const bgSecondary = isDark ? "#1a1a1a" : "#f3f4f6";
+  const borderColor = isDark ? "#2a2a2a" : "#d1d5db";
+  const textPrimary = isDark ? "#f9fafb" : "#111827";
+  const textSecondary = isDark ? "#9ca3af" : "#6b7280";
+
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -34,6 +44,7 @@ export function Modal({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        padding: "20px",
       }}
     >
       {/* Backdrop */}
@@ -42,7 +53,7 @@ export function Modal({
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0,0,0,0.45)",
+          background: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)",
           backdropFilter: "blur(4px)",
         }}
       />
@@ -52,53 +63,94 @@ export function Modal({
         style={{
           position: "relative",
           width: "100%",
-          maxWidth,
-          margin: 16,
-          background: "#0b0f1a",
-          border: "1px solid #1f2937",
-          borderRadius: 12,
+          maxWidth: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+          background: bgPrimary,
+          border: `1px solid ${borderColor}`,
+          borderRadius: "16px",
           boxShadow:
-            "0 1px 0 rgba(255,255,255,0.03) inset, 0 24px 48px rgba(0,0,0,0.5)",
+            "0 20px 25px -5px rgba(0,0,0,0.3), 0 10px 10px -5px rgba(0,0,0,0.2)",
+          maxHeight: "90vh",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ padding: 16, borderBottom: "1px solid #1f2937" }}>
+        {title && (
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              padding: "24px 24px 20px",
+              borderBottom: `1px solid ${borderColor}`,
+              flexShrink: 0,
             }}
           >
-            <div style={{ color: "#e5e7eb", fontWeight: 800, fontSize: 18 }}>
-              {title}
-            </div>
-            <button
-              aria-label="Close"
-              onClick={onClose}
+            <div
               style={{
-                background: "transparent",
-                color: "#9ca3af",
-                border: 0,
-                borderRadius: 6,
-                padding: 6,
-                cursor: "pointer",
-                fontSize: 18,
-                lineHeight: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              ×
-            </button>
+              <div
+                style={{
+                  color: textPrimary,
+                  fontWeight: 700,
+                  fontSize: "20px",
+                }}
+              >
+                {title}
+              </div>
+              <button
+                aria-label="Close"
+                onClick={onClose}
+                style={{
+                  background: "transparent",
+                  color: textSecondary,
+                  border: 0,
+                  borderRadius: "6px",
+                  padding: "8px",
+                  cursor: "pointer",
+                  fontSize: "20px",
+                  lineHeight: 1,
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = bgSecondary;
+                  e.currentTarget.style.color = textPrimary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = textSecondary;
+                }}
+              >
+                ×
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div style={{ padding: 16 }}>{children}</div>
+        <div
+          style={{
+            padding: "24px",
+            overflowY: "auto",
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
+          {children}
+        </div>
 
         {footer && (
           <div
             style={{
-              padding: 16,
-              borderTop: "1px solid #1f2937",
-              textAlign: "right",
+              padding: "20px 24px",
+              borderTop: `1px solid ${borderColor}`,
+              flexShrink: 0,
             }}
           >
             {footer}

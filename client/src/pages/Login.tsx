@@ -1,8 +1,82 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
+
+// Component to check if setup is needed and show link
+function SetupLink() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const accentColor = isDark ? "#ffffff" : "#3b82f6";
+
+  const [showSetup, setShowSetup] = React.useState(false);
+  const [checking, setChecking] = React.useState(true);
+
+  React.useEffect(() => {
+    // Check if setup is needed by trying the setup endpoint
+    fetch("/api/setup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "CHECK",
+        email: "check@check.com",
+        password: "check123456",
+        role: "main_admin",
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        // If it says "already completed", don't show link
+        // If it's a validation error or works, show link
+        if (res.status === 403 && data.message?.includes("already completed")) {
+          setShowSetup(false);
+        } else {
+          // Setup endpoint is available (validation error means it exists)
+          setShowSetup(true);
+        }
+      })
+      .catch(() => {
+        setShowSetup(false);
+      })
+      .finally(() => {
+        setChecking(false);
+      });
+  }, []);
+
+  if (checking || !showSetup) return null;
+
+  return (
+    <p
+      style={{
+        color: accentColor,
+        fontSize: 14,
+        margin: "16px 0 0 0",
+      }}
+    >
+      <a
+        href="/register"
+        style={{
+          color: accentColor,
+          textDecoration: "underline",
+          cursor: "pointer",
+        }}
+      >
+        First time setup? Create admin account
+      </a>
+    </p>
+  );
+}
 
 export default function Login() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const bgPrimary = isDark ? "#0a0a0a" : "#ffffff";
+  const bgSecondary = isDark ? "#1a1a1a" : "#f3f4f6";
+  const borderColor = isDark ? "#2a2a2a" : "#d1d5db";
+  const textPrimary = isDark ? "#f9fafb" : "#111827";
+  const textSecondary = isDark ? "#9ca3af" : "#6b7280";
+  const accentColor = isDark ? "#ffffff" : "#3b82f6";
+
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
@@ -25,16 +99,16 @@ export default function Login() {
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "#000000",
+        background: bgPrimary,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -43,12 +117,11 @@ export default function Login() {
     >
       <div
         style={{
-          background: "#000000",
+          background: bgSecondary,
           borderRadius: 16,
           padding: "40px",
-          boxShadow:
-            "0 0 30px rgba(245, 158, 11, 0.3), 0 20px 40px rgba(0,0,0,0.8)",
-          border: "2px solid #f59e0b",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.1)",
+          border: `1px solid ${borderColor}`,
           width: "100%",
           maxWidth: 400,
         }}
@@ -68,6 +141,15 @@ export default function Login() {
               maxWidth: "280px",
               height: "auto",
               objectFit: "contain",
+              filter: isDark
+                ? "none"
+                : "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) brightness(1.05)",
+              padding: isDark ? "0" : "12px",
+              borderRadius: isDark ? "0" : "8px",
+              backgroundColor: isDark
+                ? "transparent"
+                : "rgba(255, 255, 255, 0.6)",
+              border: isDark ? "none" : "1px solid rgba(0, 0, 0, 0.05)",
             }}
             onError={(e) => {
               // Fallback if logo doesn't exist
@@ -75,10 +157,13 @@ export default function Login() {
               target.style.display = "none";
               const parent = target.parentElement;
               if (parent) {
+                const isDark =
+                  document.documentElement.getAttribute("data-theme") ===
+                  "dark";
                 parent.innerHTML = `
                   <div style="
-                    background: #f59e0b;
-                    color: #000;
+                    background: ${isDark ? "#1a1a1a" : "#f59e0b"};
+                    color: ${isDark ? "#ffffff" : "#000"};
                     padding: 20px;
                     border-radius: 8px;
                     font-weight: bold;
@@ -102,8 +187,8 @@ export default function Login() {
         >
           <h1
             style={{
-              color: "#ffffff",
-              fontSize: 28,
+              color: textPrimary,
+              fontSize: 32,
               fontWeight: 800,
               margin: 0,
               marginBottom: 8,
@@ -113,8 +198,8 @@ export default function Login() {
           </h1>
           <p
             style={{
-              color: "#9ca3af",
-              fontSize: 16,
+              color: textSecondary,
+              fontSize: 18,
               margin: 0,
             }}
           >
@@ -128,8 +213,8 @@ export default function Login() {
             <label
               style={{
                 display: "block",
-                color: "#e5e7eb",
-                fontSize: 14,
+                color: textPrimary,
+                fontSize: 16,
                 fontWeight: 600,
                 marginBottom: 8,
               }}
@@ -144,21 +229,21 @@ export default function Login() {
               required
               style={{
                 width: "100%",
-                padding: "12px 16px",
-                background: "#1f2937",
-                border: "1px solid #374151",
+                padding: "14px 16px",
+                background: isDark ? "#1a1a1a" : "#ffffff",
+                border: `1px solid ${borderColor}`,
                 borderRadius: 8,
-                color: "#ffffff",
+                color: textPrimary,
                 fontSize: 16,
                 outline: "none",
                 transition: "border-color 0.2s ease",
                 boxSizing: "border-box",
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#f59e0b";
+                e.target.style.borderColor = accentColor;
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = "#374151";
+                e.target.style.borderColor = borderColor;
               }}
             />
           </div>
@@ -167,8 +252,8 @@ export default function Login() {
             <label
               style={{
                 display: "block",
-                color: "#e5e7eb",
-                fontSize: 14,
+                color: textPrimary,
+                fontSize: 16,
                 fontWeight: 600,
                 marginBottom: 8,
               }}
@@ -183,21 +268,21 @@ export default function Login() {
               required
               style={{
                 width: "100%",
-                padding: "12px 16px",
-                background: "#1f2937",
-                border: "1px solid #374151",
+                padding: "14px 16px",
+                background: isDark ? "#1a1a1a" : "#ffffff",
+                border: `1px solid ${borderColor}`,
                 borderRadius: 8,
-                color: "#ffffff",
+                color: textPrimary,
                 fontSize: 16,
                 outline: "none",
                 transition: "border-color 0.2s ease",
                 boxSizing: "border-box",
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = "#f59e0b";
+                e.target.style.borderColor = accentColor;
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = "#374151";
+                e.target.style.borderColor = borderColor;
               }}
             />
           </div>
@@ -206,13 +291,13 @@ export default function Login() {
           {error && (
             <div
               style={{
-                background: "#1f2937",
+                background: isDark ? "#7f1d1d" : "#fef2f2",
                 border: "1px solid #ef4444",
                 borderRadius: 8,
-                padding: "12px 16px",
+                padding: "14px 16px",
                 marginBottom: 20,
-                color: "#ef4444",
-                fontSize: 14,
+                color: isDark ? "#fca5a5" : "#dc2626",
+                fontSize: 16,
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
@@ -229,12 +314,18 @@ export default function Login() {
             disabled={isLoading}
             style={{
               width: "100%",
-              padding: "14px 16px",
-              background: isLoading ? "#374151" : "#f59e0b",
-              color: isLoading ? "#9ca3af" : "#000000",
+              padding: "16px 20px",
+              background: isLoading
+                ? isDark
+                  ? "#374151"
+                  : "#f3f4f6"
+                : isDark
+                ? "#ffffff"
+                : "#3b82f6",
+              color: isLoading ? textSecondary : isDark ? "#111827" : "#ffffff",
               border: "none",
               borderRadius: 8,
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: 700,
               cursor: isLoading ? "not-allowed" : "pointer",
               transition: "all 0.2s ease",
@@ -245,13 +336,17 @@ export default function Login() {
             }}
             onMouseEnter={(e) => {
               if (!isLoading) {
-                e.currentTarget.style.background = "#d97706";
+                e.currentTarget.style.background = isDark
+                  ? "#e5e5e5"
+                  : "#2563eb";
                 e.currentTarget.style.transform = "translateY(-1px)";
               }
             }}
             onMouseLeave={(e) => {
               if (!isLoading) {
-                e.currentTarget.style.background = "#f59e0b";
+                e.currentTarget.style.background = isDark
+                  ? "#ffffff"
+                  : "#3b82f6";
                 e.currentTarget.style.transform = "translateY(0)";
               }
             }}
@@ -262,7 +357,7 @@ export default function Login() {
                   style={{
                     width: 16,
                     height: 16,
-                    border: "2px solid #9ca3af",
+                    border: `2px solid ${textSecondary}`,
                     borderTop: "2px solid transparent",
                     borderRadius: "50%",
                     animation: "spin 1s linear infinite",
@@ -282,13 +377,13 @@ export default function Login() {
             textAlign: "center",
             marginTop: 32,
             paddingTop: 24,
-            borderTop: "1px solid #1f2937",
+            borderTop: `1px solid ${borderColor}`,
           }}
         >
           <p
             style={{
-              color: "#6b7280",
-              fontSize: 12,
+              color: textSecondary,
+              fontSize: 14,
               margin: 0,
             }}
           >
@@ -296,13 +391,15 @@ export default function Login() {
           </p>
           <p
             style={{
-              color: "#6b7280",
+              color: textSecondary,
               fontSize: 12,
-              margin: "4px 0 0 0",
+              margin: "8px 0 0 0",
             }}
           >
             Authorized personnel only
           </p>
+          {/* Only show setup link if no admins exist - check via API */}
+          <SetupLink />
         </div>
       </div>
 

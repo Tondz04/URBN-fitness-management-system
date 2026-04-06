@@ -66,7 +66,7 @@ class Membership extends Model
 
     public function scopeExpired($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->where('status', 'expired')->orWhere('end_date', '<', Carbon::now());
         });
     }
@@ -75,8 +75,8 @@ class Membership extends Model
     {
         $nextWeek = Carbon::now()->addDays(7);
         return $query->where('status', 'active')
-                    ->where('end_date', '<=', $nextWeek)
-                    ->where('end_date', '>=', Carbon::now());
+            ->where('end_date', '<=', $nextWeek)
+            ->where('end_date', '>=', Carbon::now());
     }
 
     // Static methods for membership types
@@ -97,6 +97,11 @@ class Membership extends Model
                 'name' => 'Regular with Coach',
                 'price' => 1500,
                 'duration_days' => 30
+            ],
+            'walk_in' => [
+                'name' => 'Walk-in',
+                'price' => 50,
+                'duration_days' => 1
             ]
         ];
     }

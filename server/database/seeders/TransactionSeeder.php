@@ -20,30 +20,38 @@ class TransactionSeeder extends Seeder
         // Create membership transactions
         foreach ($users as $user) {
             if ($user->membership_type && $user->membership_fee) {
-                // Create membership record
-                $membership = Membership::create([
-                    'user_id' => $user->id,
-                    'type' => $user->membership_type,
-                    'amount' => $user->membership_fee,
-                    'start_date' => $user->membership_start_date,
-                    'end_date' => $user->membership_end_date,
-                    'status' => $user->status === 'active' ? 'active' : 'expired',
-                    'notes' => $user->notes
-                ]);
+                // Check if membership already exists
+                $membership = Membership::firstOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'type' => $user->membership_type,
+                    ],
+                    [
+                        'amount' => $user->membership_fee,
+                        'start_date' => $user->membership_start_date,
+                        'end_date' => $user->membership_end_date,
+                        'status' => $user->status === 'active' ? 'active' : 'expired',
+                        'notes' => $user->notes
+                    ]
+                );
 
-                // Create transaction for membership
-                Transaction::create([
-                    'user_id' => $user->id,
-                    'transaction_type' => 'membership',
-                    'membership_id' => $membership->id,
-                    'quantity' => 1,
-                    'unit_price' => $user->membership_fee,
-                    'total_amount' => $user->membership_fee,
-                    'status' => 'paid',
-                    'payment_mode' => 'gcash',
-                    'transaction_date' => $user->membership_start_date,
-                    'notes' => 'Membership enrollment'
-                ]);
+                // Create transaction for membership if it doesn't exist
+                Transaction::firstOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'transaction_type' => 'membership',
+                        'membership_id' => $membership->id,
+                        'transaction_date' => $user->membership_start_date,
+                    ],
+                    [
+                        'quantity' => 1,
+                        'unit_price' => $user->membership_fee,
+                        'total_amount' => $user->membership_fee,
+                        'status' => 'paid',
+                        'payment_mode' => 'gcash',
+                        'notes' => 'Membership enrollment'
+                    ]
+                );
             }
         }
 
@@ -84,18 +92,23 @@ class TransactionSeeder extends Seeder
             $product = Product::where('name', $pt['product_name'])->first();
 
             if ($user && $product) {
-                Transaction::create([
-                    'user_id' => $user->id,
-                    'transaction_type' => 'product',
-                    'product_id' => $product->id,
-                    'quantity' => $pt['quantity'],
-                    'unit_price' => $product->price,
-                    'total_amount' => $product->price * $pt['quantity'],
-                    'status' => 'paid',
-                    'payment_mode' => $pt['payment_mode'],
-                    'transaction_date' => $pt['transaction_date'],
-                    'notes' => 'Product purchase'
-                ]);
+                // Use firstOrCreate to avoid duplicates
+                Transaction::firstOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'transaction_type' => 'product',
+                        'product_id' => $product->id,
+                        'transaction_date' => $pt['transaction_date'],
+                    ],
+                    [
+                        'quantity' => $pt['quantity'],
+                        'unit_price' => $product->price,
+                        'total_amount' => $product->price * $pt['quantity'],
+                        'status' => 'paid',
+                        'payment_mode' => $pt['payment_mode'],
+                        'notes' => 'Product purchase'
+                    ]
+                );
             }
         }
     }

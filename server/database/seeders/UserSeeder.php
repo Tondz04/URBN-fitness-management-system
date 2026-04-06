@@ -90,7 +90,13 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            User::create($userData);
+            // Normalize name to ALL CAPS
+            $userData['name'] = strtoupper($userData['name']);
+            // Use firstOrCreate to avoid duplicates
+            User::firstOrCreate(
+                ['email' => $userData['email']],
+                $userData
+            );
         }
     }
 }

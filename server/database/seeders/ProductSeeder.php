@@ -71,7 +71,11 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $productData) {
-            Product::create($productData);
+            // Use firstOrCreate to avoid duplicates
+            Product::firstOrCreate(
+                ['name' => $productData['name']],
+                $productData
+            );
         }
     }
 }
